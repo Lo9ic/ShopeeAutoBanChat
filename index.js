@@ -42,34 +42,59 @@ let deviceId = null;
 let bannedUsers = [];
 
 function getSessionId() {
-    const sessionUrl = 'https://live.shopee.co.id/webapi/v1/session';
+  const sessionUrl = 'https://creator.shopee.co.id/supply/api/lm/sellercenter/realtime/sessionList?page=1&pageSize=10&name=';
   
     axios.get(sessionUrl, {
-        headers: {
-          'Cookie': cookies,
-        }
-      })
-      .then(response => {
-        const sessionData = response.data;
-  
-        if (sessionData && sessionData.err_code === 0 && sessionData.data && sessionData.data.session) {
-          sessionId = sessionData.data.session.session_id;
-          chatroomId = sessionData.data.session.chatroom_id;
-          deviceId = sessionData.data.session.device_id;
-  
-          console.log('Session ID:', sessionId);
-          console.log('Chatroom ID:', chatroomId);
-          console.log('Device ID:', deviceId);
-  
-          checkMessage();
-        } else {
-          console.log('Error getting session ID:', sessionData.err_msg);
-        }
-      })
-      .catch(error => {
-        console.error('Error getting session ID:', error.message);
-      });
+      headers: {
+        'x-region': 'id',
+        'Cookie': cookies,
+      }
+    })
+    .then(response => {
+      const sessionData = response.data;
+      sessionId = sessionData.data.list[0].sessionId;
+      getUserSig();
+    })
+    .catch(error => {
+      console.error('Error getting session ID:', error.message);
+    });
   }
+
+function getUserSig()
+{
+  const sigUrl = `https://live.shopee.co.id/webapi/v1/session/${sessionId}/preview?uuid=sdjiakakaksd&ver=2`
+  axios.get(sigUrl, {
+    headers: {
+      'Cookie': cookies,
+      'refferer': `https://live.shopee.co.id/pc/preview?session=${sessionId}`,
+    }
+  })
+  .then(response => {
+    const sigData = response.data;
+
+    if (sigData && sigData.err_code === 0 && sigData.data && sigData.data.usersig) {
+      userSig = sigData.data.usersig;
+      chatroomId = sigData.data.session.chatroom_id;
+      deviceId = sigData.data.session.device_id;
+      myUid = sigData.data.session.uid;
+
+      console.log('Session ID:', sessionId);
+      console.log('Chatroom ID:', chatroomId);
+      console.log('Device ID:', deviceId);
+      console.log('My UID:', myUid);
+
+      console.log('User Signature:', userSig);
+
+
+      getUserSigAgain();
+    } else {
+      console.log('Error getting session ID:', sigData.err_msg);
+    }
+  })
+  .catch(error => {
+    console.error('Error getting session ID:', error.message);
+  });
+}
 
 function containsBannedWords(content) {
     const lowerContent = content.toLowerCase();
