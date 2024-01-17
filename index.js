@@ -86,7 +86,7 @@ function getUserSig()
       console.log('User Signature:', userSig);
 
 
-      getUserSigAgain();
+      checkMessage();
     } else {
       console.log('Error getting session ID:', sigData.err_msg);
     }
